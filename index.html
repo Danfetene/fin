@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HydroEt — Water Advisor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #111827;
+    --surface2: #1a2332;
+    --border: rgba(255,255,255,0.08);
+    --accent: #00d4aa;
+    --accent2: #0099ff;
+    --accent3: #7c3aed;
+    --text: #f0f4ff;
+    --text2: #8b9ab5;
+    --text3: #4a5568;
+    --danger: #ff4d6d;
+    --warning: #ffa500;
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 60% 40% at 80% 10%, rgba(0,212,170,0.08) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 10% 80%, rgba(0,153,255,0.06) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+  .container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+  .header { padding: 20px 20px 0; margin-bottom: 24px; }
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .logo-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--text); letter-spacing: -0.5px; }
+  .logo-text span { color: var(--accent); }
+  .header-sub { font-size: 15px; color: var(--text2); line-height: 1.6; }
+  .screen { display: none; padding: 0 16px; }
+  .screen.active { display: block; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); margin-bottom: 14px; }
+  .slider-row { margin-bottom: 18px; }
+  .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .slider-label span:first-child { font-size: 16px; color: var(--text2); }
+  .slider-label span:last-child { font-size: 16px; font-weight: 600; color: var(--accent); }
+  input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: var(--surface2); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); cursor: pointer; box-shadow: 0 0 0 4px rgba(0,212,170,0.15); }
+  .select-row { margin-bottom: 14px; }
+  .select-row label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 6px; }
+  select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; padding: 10px 12px; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; }
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; }
+  .metric-label { font-size: 13px; color: var(--text3); margin-bottom: 6px; font-weight: 600; }
+  .metric-value { font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--accent); line-height: 1; }
+  .metric-unit { font-size: 14px; color: var(--text2); margin-top: 3px; }
+  .mineral-row { margin-bottom: 12px; }
+  .mineral-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .mineral-name { font-size: 15px; color: var(--text2); }
+  .mineral-val { font-size: 15px; font-weight: 600; color: var(--text); }
+  .mineral-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .mineral-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
+  .insight { background: rgba(0,212,170,0.07); border: 1px solid rgba(0,212,170,0.2); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .insight-icon { font-size: 22px; margin-bottom: 6px; display: block; }
+  .insight p { font-size: 15px; color: var(--text2); line-height: 1.65; }
+  .insight p strong { color: var(--accent); font-weight: 600; }
+  .who-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .who-row:last-child { border-bottom: none; }
+  .who-name { font-size: 14px; color: var(--text2); width: 110px; flex-shrink: 0; }
+  .who-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+  .who-bar-row { display: flex; align-items: center; gap: 6px; }
+  .who-bar-label { font-size: 12px; color: var(--text3); width: 36px; flex-shrink: 0; }
+  .who-bar-track { flex: 1; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .who-bar-fill { height: 100%; border-radius: 3px; }
+  .who-score { font-size: 13px; font-weight: 600; padding: 3px 8px; border-radius: 6px; flex-shrink: 0; }
+  .score-good { background: rgba(0,212,170,0.15); color: var(--accent); }
+  .score-ok { background: rgba(255,165,0,0.15); color: var(--warning); }
+  .score-bad { background: rgba(255,77,109,0.15); color: var(--danger); }
+  .qa-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 10px 16px; font-size: 14px; color: var(--text2); cursor: pointer; white-space: nowrap; font-family: 'DM Sans', sans-serif; transition: all 0.2s; display: inline-block; margin: 4px; }
+  .qa-btn:active { background: rgba(0,212,170,0.1); border-color: var(--accent); color: var(--accent); transform: scale(0.96); }
+  .qa-wrap { display: flex; flex-wrap: wrap; margin: -4px; }
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,15,26,0.95); border-top: 1px solid var(--border); display: flex; backdrop-filter: blur(20px); z-index: 100; max-width: 480px; margin: 0 auto; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 4px; cursor: pointer; transition: all 0.2s; gap: 4px; }
+  .nav-icon { font-size: 24px; transition: all 0.2s; }
+  .nav-label { font-size: 12px; font-weight: 500; color: var(--text3); transition: all 0.2s; }
+  .nav-item.active .nav-icon, .nav-item.active .nav-label { color: var(--accent); }
+  .nav-item:active { transform: scale(0.92); }
+  .cta-btn { width: 100%; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: var(--radius); padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 600; color: #0a0f1a; cursor: pointer; margin-top: 4px; transition: all 0.2s; letter-spacing: 0.01em; }
+  .cta-btn:active { transform: scale(0.97); opacity: 0.9; }
+  .tiktok-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.25); border-radius: 20px; padding: 6px 14px; font-size: 14px; color: var(--accent); font-weight: 500; margin-bottom: 8px; }
+  .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+  .profile-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; cursor: pointer; user-select: none; -webkit-user-select: none; gap: 8px; }
+  .profile-header-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; flex-wrap: wrap; }
+  .profile-title { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); flex-shrink: 0; }
+  .profile-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .profile-chip { font-size: 12px; color: var(--accent); background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.18); border-radius: 20px; padding: 2px 7px; white-space: nowrap; }
+  .profile-toggle { font-size: 12px; color: var(--text3); transition: transform 0.25s ease; flex-shrink: 0; }
+  .profile-toggle.open { transform: rotate(180deg); }
+  .profile-body { max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(.4,0,.2,1); }
+  .profile-body.open { max-height: 700px; }
+  .profile-inner { padding: 12px 14px 14px; border-top: 1px solid var(--border); }
+  .weight-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .weight-row label { font-size: 14px; color: var(--text2); flex-shrink: 0; }
+  .weight-row input[type=range] { flex: 1; }
+  .weight-row .wval { font-size: 15px; font-weight: 600; color: var(--accent); width: 42px; text-align: right; flex-shrink: 0; }
+  .selects-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sel-compact label { font-size: 12px; color: var(--text3); display: block; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .sel-compact select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 7px 9px; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; }
+  .section-label { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); padding: 0 4px; margin: 16px 0 8px; }
+  .type-pill, .intensity-pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 9px 15px; font-size: 14px; color: var(--text2); cursor: pointer; transition: all 0.18s; user-select: none; -webkit-user-select: none; white-space: nowrap; }
+  .type-pill.active, .intensity-pill.active { background: rgba(0,212,170,0.12); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .type-pill:active, .intensity-pill:active { transform: scale(0.94); }
+  .history-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); animation: fadeUp 0.25s ease; }
+  .history-item:last-child { border-bottom: none; }
+  .history-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(0,212,170,0.1); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .history-info { flex: 1; }
+  .history-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .history-meta { font-size: 13px; color: var(--text2); }
+  .history-right { text-align: right; }
+  .history-cal { font-size: 15px; font-weight: 600; color: var(--warning); }
+  .history-water { font-size: 13px; color: var(--accent); margin-top: 2px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .screen.active .card, .screen.active .metric-grid, .screen.active .insight { animation: fadeUp 0.3s ease forwards; }
+  .screen.active .card:nth-child(2) { animation-delay: 0.05s; }
+  .screen.active .card:nth-child(3) { animation-delay: 0.1s; }
+
+  /* ── HeartBeat Tracker styles ── */
+  .hb-ring-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 6px 0 10px;
+  }
+  .hb-ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hb-ring-border {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(0,212,170,0.2);
+    transition: border-color 0.3s;
+  }
+  .hb-ring-border.active {
+    border-color: rgba(255,77,109,0.7);
+    animation: hbRingPulse 0.85s ease-in-out infinite;
+  }
+  @keyframes hbRingPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.05);opacity:0.65} }
+  .hb-viewport {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--surface2);
+    position: relative;
+  }
+  #hbVideo { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); }
+  .hb-overlay { position: absolute; inset: 0; border-radius: 50%; background: rgba(0,0,0,0.12); pointer-events: none; }
+  .hb-progress-svg { position: absolute; inset: -4px; width: 108px; height: 108px; transform: rotate(-90deg); pointer-events: none; }
+  .hb-progress-svg circle { fill: none; stroke: var(--danger); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 314; stroke-dashoffset: 314; transition: stroke-dashoffset 0.5s linear; opacity: 0.75; }
+
+  .hb-bpm-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .hb-bpm-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--text);
+    transition: color 0.4s;
+  }
+  .hb-bpm-number.active { color: var(--danger); }
+  .hb-bpm-unit { font-size: 18px; color: var(--text3); letter-spacing: 0.08em; }
+  .hb-status {
+    text-align: center;
+    font-size: 15px;
+    color: var(--text3);
+    min-height: 18px;
+    margin-bottom: 12px;
+    letter-spacing: 0.04em;
+  }
+  .hb-status.measuring { color: var(--danger); animation: hbBlink 1.2s ease-in-out infinite; }
+  .hb-status.ok { color: var(--accent); }
+  @keyframes hbBlink { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  .hb-wave {
+    width: 100%;
+    height: 60px;
+    background: rgba(255,77,109,0.04);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  #hbWaveCanvas { width: 100%; height: 100%; display: block; }
+
+  .hb-zone-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .zone-rest   { background: rgba(0,212,170,0.12); color: var(--accent); border: 1px solid rgba(0,212,170,0.25); }
+  .zone-normal { background: rgba(0,153,255,0.12); color: var(--accent2); border: 1px solid rgba(0,153,255,0.25); }
+  .zone-elevated { background: rgba(255,165,0,0.12); color: var(--warning); border: 1px solid rgba(255,165,0,0.25); }
+  .zone-high   { background: rgba(255,77,109,0.12); color: var(--danger); border: 1px solid rgba(255,77,109,0.3); }
+
+  .hb-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .hb-btn { border: none; border-radius: var(--radius-sm); padding: 13px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .hb-btn-start { background: linear-gradient(135deg, var(--danger), #c0392b); color: #fff; }
+  .hb-btn-stop  { background: var(--surface2); border: 1px solid var(--border); color: var(--text2); }
+  .hb-btn:active { transform: scale(0.96); }
+  .hb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .hb-history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hb-history-item:last-child { border-bottom: none; }
+  .hb-hist-bpm { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--danger); }
+  .hb-hist-meta { font-size: 13px; color: var(--text3); margin-top: 2px; }
+  .hb-hist-zone { font-size: 13px; padding: 2px 8px; border-radius: 6px; }
+
+  .hb-err { background: rgba(255,77,109,0.08); border: 1px solid rgba(255,77,109,0.2); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: var(--danger); line-height: 1.5; margin-bottom: 12px; display: none; }
+
+  .hb-tip { background: rgba(255,77,109,0.06); border: 1px solid rgba(255,77,109,0.15); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
+  .hb-tip p { font-size: 15px; color: var(--text2); line-height: 1.65; }
+  .hb-tip p strong { color: var(--danger); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">💧</div>
+      <div class="logo-text">Hydro<span>Ethio</span></div>
+    </div>
+    <div class="header-sub">Your personal water & mineral advisor — powered by WHO science</div>
+  </div>
+
+  <!-- SCREEN 1: CALCULATOR -->
+  <div class="screen active" id="screen-calc">
+    <div class="profile-card">
+      <div class="profile-header" onclick="toggleProfile()">
+        <div class="profile-header-left">
+          <span class="profile-title">Your profile</span>
+          <div class="profile-chips" id="profile-chips">
+            <span class="profile-chip" id="chip-weight">70 kg</span>
+            <span class="profile-chip" id="chip-activity">Light</span>
+            <span class="profile-chip" id="chip-climate">Warm</span>
+            <span class="profile-chip" id="chip-fasting">No fasting</span>
+            <span class="profile-chip" id="chip-goal">General</span>
+          </div>
+        </div>
+        <span class="profile-toggle" id="profile-toggle">▼</span>
+      </div>
+      <div class="profile-body" id="profile-body">
+        <div class="profile-inner">
+          <div class="weight-row">
+            <label>Weight</label>
+            <input type="range" id="sl-weight" min="40" max="130" value="70" step="1" oninput="onSlide()">
+            <span class="wval" id="w-out">70 kg</span>
+          </div>
+          <div class="selects-grid">
+            <div class="sel-compact"><label>Activity</label>
+              <select id="sel-activity" onchange="calculate()">
+                <option value="1.0">Sedentary</option><option value="1.3" selected>Light</option>
+                <option value="1.6">Active</option><option value="2.0">Very active</option>
+              </select>
+            </div>
+            <div class="sel-compact"><label>Climate</label>
+              <select id="sel-climate" onchange="calculate()">
+                <option value="1.0">Cool highlands</option><option value="1.2" selected>Warm</option>
+                <option value="1.4">Hot</option><option value="1.6">Very hot</option>
+              </select>
+            </div>
+            <div class="sel-compact"><label>Fasting</label>
+              <select id="sel-fasting" onchange="calculate()">
+                <option value="1.0" selected>No fasting</option><option value="1.15">Occasional</option>
+                <option value="1.25">Orthodox Tsom</option><option value="1.35">Ramadan</option>
+              </select>
+            </div>
+            <div class="sel-compact"><label>Health goal</label>
+              <select id="sel-goal" onchange="calculate()">
+                <option value="general">General</option><option value="athlete">Athlete</option>
+                <option value="weight">Weight</option><option value="heart">Heart</option>
+                <option value="bones">Bones</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">Daily water needed</div><div class="metric-value" id="m-water">2.8</div><div class="metric-unit">litres / day</div></div>
+      <div class="metric-card"><div class="metric-label">Glasses (250 ml)</div><div class="metric-value" id="m-glasses">11</div><div class="metric-unit">glasses / day</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Minerals your water should contain (per litre)</div>
+      <div class="mineral-row"><div class="mineral-header"><span class="mineral-name">Calcium (Ca)</span><span class="mineral-val" id="v-ca">80 mg/L</span></div><div class="mineral-track"><div class="mineral-fill" id="b-ca" style="width:53%;background:linear-gradient(90deg,#00d4aa,#0099ff)"></div></div></div>
+      <div class="mineral-row"><div class="mineral-header"><span class="mineral-name">Magnesium (Mg)</span><span class="mineral-val" id="v-mg">30 mg/L</span></div><div class="mineral-track"><div class="mineral-fill" id="b-mg" style="width:60%;background:linear-gradient(90deg,#0099ff,#7c3aed)"></div></div></div>
+      <div class="mineral-row"><div class="mineral-header"><span class="mineral-name">Potassium (K)</span><span class="mineral-val" id="v-k">10 mg/L</span></div><div class="mineral-track"><div class="mineral-fill" id="b-k" style="width:40%;background:linear-gradient(90deg,#7c3aed,#d946ef)"></div></div></div>
+      <div class="mineral-row"><div class="mineral-header"><span class="mineral-name">Sodium (Na)</span><span class="mineral-val" id="v-na">15 mg/L</span></div><div class="mineral-track"><div class="mineral-fill" id="b-na" style="width:30%;background:linear-gradient(90deg,#f59e0b,#ef4444)"></div></div></div>
+      <div class="mineral-row" style="margin-bottom:0"><div class="mineral-header"><span class="mineral-name">Bicarbonate</span><span class="mineral-val" id="v-bi">100 mg/L</span></div><div class="mineral-track"><div class="mineral-fill" id="b-bi" style="width:50%;background:linear-gradient(90deg,#10b981,#00d4aa)"></div></div></div>
+    </div>
+    <div class="insight"><span class="insight-icon">💡</span><p id="insight-text">For your profile, balanced mineral water with TDS 100–300 mg/L is ideal. Ambo mineral water is currently the closest Ethiopian brand to WHO standards.</p></div>
+    <div class="section-label">Ask your water advisor</div>
+    <div class="card" style="padding:12px">
+      <div class="qa-wrap">
+        <div class="qa-btn" onclick="ask('What are the best water brands in Ethiopia for my profile and health goal?')">Best Ethiopian water for me 💬</div>
+        <div class="qa-btn" onclick="ask('What symptoms show I am mineral deficient from drinking poor quality water?')">Signs of deficiency 💬</div>
+        <div class="qa-btn" onclick="ask('How does Orthodox Tsom fasting affect my hydration and mineral needs?')">Fasting & hydration 💬</div>
+        <div class="qa-btn" onclick="ask('What is functional water and why does Ethiopia need it?')">Functional water 💬</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: BRANDS -->
+  <div class="screen" id="screen-brands">
+    <div class="tiktok-badge">📊 Ethiopian Water Brands vs WHO Standard</div>
+    <div class="card">
+      <div class="card-title">Ethiopian brands vs WHO standard — real lab data</div>
+      <div class="who-row"><div class="who-name" style="font-weight:600;color:var(--text);font-size:12px">WHO minimum</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca 50+</span><div class="who-bar-track"><div class="who-bar-fill" style="width:100%;background:var(--accent)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 10+</span><div class="who-bar-track"><div class="who-bar-fill" style="width:100%;background:var(--accent2)"></div></div></div></div><span class="who-score score-good">Target</span></div>
+      <div class="who-row"><div class="who-name">Ambo Mineral</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca 72</span><div class="who-bar-track"><div class="who-bar-fill" style="width:100%;background:var(--accent)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 46</span><div class="who-bar-track"><div class="who-bar-fill" style="width:100%;background:var(--accent2)"></div></div></div></div><span class="who-score score-good">Good ✓</span></div>
+      <div class="who-row"><div class="who-name">Fham</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca 8.0</span><div class="who-bar-track"><div class="who-bar-fill" style="width:16%;background:var(--warning)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 4.6</span><div class="who-bar-track"><div class="who-bar-fill" style="width:46%;background:var(--warning)"></div></div></div></div><span class="who-score score-ok">Low</span></div>
+      <div class="who-row"><div class="who-name">Fine</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca 2.0</span><div class="who-bar-track"><div class="who-bar-fill" style="width:4%;background:var(--danger)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 1.0</span><div class="who-bar-track"><div class="who-bar-fill" style="width:10%;background:var(--danger)"></div></div></div></div><span class="who-score score-bad">Poor</span></div>
+      <div class="who-row"><div class="who-name">Yes</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca 1.2</span><div class="who-bar-track"><div class="who-bar-fill" style="width:2%;background:var(--danger)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 0.8</span><div class="who-bar-track"><div class="who-bar-fill" style="width:8%;background:var(--danger)"></div></div></div></div><span class="who-score score-bad">Poor</span></div>
+      <div class="who-row"><div class="who-name">Aqua Addis</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca &lt;1</span><div class="who-bar-track"><div class="who-bar-fill" style="width:2%;background:var(--danger)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 0.9</span><div class="who-bar-track"><div class="who-bar-fill" style="width:9%;background:var(--danger)"></div></div></div></div><span class="who-score score-bad">Stripped</span></div>
+      <div class="who-row"><div class="who-name">Top Water</div><div class="who-bars"><div class="who-bar-row"><span class="who-bar-label">Ca &lt;1</span><div class="who-bar-track"><div class="who-bar-fill" style="width:1%;background:var(--danger)"></div></div></div><div class="who-bar-row"><span class="who-bar-label">Mg 0.2</span><div class="who-bar-track"><div class="who-bar-fill" style="width:2%;background:var(--danger)"></div></div></div></div><span class="who-score score-bad">Stripped</span></div>
+    </div>
+    <div class="insight"><span class="insight-icon">🇪🇹</span><p><strong>Only Ambo Mineral</strong> meets WHO calcium & magnesium standards out of all brands tested. Every other brand has calcium levels far below the WHO minimum of 50 mg/L.</p></div>
+    <div class="card" style="padding:12px"><div class="qa-wrap">
+      <div class="qa-btn" onclick="ask('Why is Ambo mineral water better than other Ethiopian water brands scientifically?')">Why is Ambo better? 💬</div>
+      <div class="qa-btn" onclick="ask('What does low calcium and magnesium in drinking water do to my body long term?')">Health risks 💬</div>
+      <div class="qa-btn" onclick="ask('How can I improve the mineral content of low-quality bottled water at home?')">Boost low-mineral water 💬</div>
+    </div></div>
+  </div>
+
+  <!-- SCREEN 3: MOVE TRACKER -->
+  <div class="screen" id="screen-science">
+    <div class="tiktok-badge">🏃 EthioMove — GPS Workout Tracker</div>
+    <div class="card" id="gps-card">
+      <div class="card-title">Live GPS tracking</div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Workout type</div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;" id="type-pills">
+          <div class="type-pill active" data-val="run" data-met="9.8" onclick="selectType(this)">🏃 Run</div>
+          <div class="type-pill" data-val="walk" data-met="3.5" onclick="selectType(this)">🚶 Walk</div>
+          <div class="type-pill" data-val="cycle" data-met="7.5" onclick="selectType(this)">🚴 Cycle</div>
+          <div class="type-pill" data-val="gym" data-met="6.0" onclick="selectType(this)">🏋️ Gym</div>
+          <div class="type-pill" data-val="swim" data-met="8.0" onclick="selectType(this)">🏊 Swim</div>
+        </div>
+      </div>
+      <div id="gps-map" style="width:100%;height:160px;background:var(--surface2);border-radius:12px;margin-bottom:14px;position:relative;overflow:hidden;">
+        <canvas id="route-canvas" width="440" height="160" style="width:100%;height:100%;"></canvas>
+        <div id="gps-placeholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;"><span style="font-size:28px;">🗺️</span><span style="font-size:12px;color:var(--text3);">Your route will appear here</span></div>
+        <div id="live-dot" style="display:none;position:absolute;width:14px;height:14px;background:var(--accent);border-radius:50%;border:2px solid white;box-shadow:0 0 0 4px rgba(0,212,170,0.3);transform:translate(-50%,-50%);transition:left 0.5s,top 0.5s;"></div>
+        <div id="gps-status-badge" style="position:absolute;top:8px;right:8px;background:rgba(10,15,26,0.85);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--text3);">Not started</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 6px;text-align:center;"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;" id="lbl-dist">Distance</div><div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--accent);" id="gps-dist">0.00</div><div style="font-size:10px;color:var(--text3);" id="lbl-dist-unit">km</div></div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 6px;text-align:center;"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;">Duration</div><div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--accent2);" id="gps-time">00:00</div><div style="font-size:10px;color:var(--text3);">min:sec</div></div>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 6px;text-align:center;"><div style="font-size:10px;color:var(--text3);margin-bottom:3px;" id="lbl-pace">Pace</div><div style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);" id="gps-pace">—</div><div style="font-size:10px;color:var(--text3);" id="lbl-pace-unit">min/km</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button id="btn-start" class="cta-btn" onclick="startGPS()" style="margin-top:0;">▶ Start</button>
+        <button id="btn-stop" class="cta-btn" onclick="stopGPS()" style="margin-top:0;background:linear-gradient(135deg,var(--danger),#c0392b);display:none;">⏹ Finish</button>
+      </div>
+      <div id="gps-error" style="display:none;margin-top:10px;background:rgba(255,77,109,0.08);border:1px solid rgba(255,77,109,0.2);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--danger);line-height:1.5;"></div>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">Workouts logged</div><div class="metric-value" id="t-count">0</div><div class="metric-unit">total sessions</div></div>
+      <div class="metric-card"><div class="metric-label">Extra water today</div><div class="metric-value" id="t-water-extra">+0.0</div><div class="metric-unit">litres needed</div></div>
+    </div>
+    <div class="card" id="history-card" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">Activity history</div>
+        <div onclick="clearHistory()" style="font-size:11px;color:var(--text3);cursor:pointer;padding:4px 8px;border:1px solid var(--border);border-radius:8px;">Clear all</div>
+      </div>
+      <div id="history-list"></div>
+    </div>
+    <div class="insight"><span class="insight-icon">💧</span><p id="tracker-tip">Press Start to begin GPS tracking. Your route will be drawn live on the map. When done, press Finish to log the workout.</p></div>
+  </div>
+
+  <!-- SCREEN 4: HEARTBEAT TRACKER -->
+  <div class="screen" id="screen-heart">
+
+    <div class="tiktok-badge">❤ HeartBeat — Camera Pulse Monitor</div>
+
+    <div class="card">
+      <div class="card-title">Camera pulse detection</div>
+
+      <!-- Ring + video -->
+      <div class="hb-ring-wrap">
+        <div class="hb-ring">
+          <svg class="hb-progress-svg" id="hbProgressSvg">
+            <circle id="hbProgressCircle" cx="54" cy="54" r="50"/>
+          </svg>
+          <div class="hb-ring-border" id="hbRingBorder"></div>
+          <div class="hb-viewport">
+            <video id="hbVideo" autoplay playsinline muted></video>
+            <div class="hb-overlay"></div>
+          </div>
+        </div>
+      </div>
+      <canvas id="hbCaptureCanvas" width="8" height="8" style="display:none;"></canvas>
+
+      <!-- BPM display -->
+      <div style="text-align:center;margin-bottom:6px;">
+        <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text3);margin-bottom:2px;">Heart Rate</div>
+        <div class="hb-bpm-row">
+          <span class="hb-bpm-number" id="hbBpmNum">--</span>
+          <span class="hb-bpm-unit">BPM</span>
+        </div>
+      </div>
+      <div class="hb-status" id="hbStatus">👆 Gently place your fingertip over the lens — no photos taken, just light pulses</div>
+
+      <!-- Zone badge -->
+      <div style="display:flex;justify-content:center;margin-bottom:10px;">
+        <span class="hb-zone-badge" id="hbZoneBadge" style="display:none;"></span>
+      </div>
+
+      <!-- Waveform -->
+      <div class="hb-wave">
+        <canvas id="hbWaveCanvas"></canvas>
+      </div>
+
+      <!-- Error -->
+      <div class="hb-err" id="hbErr"></div>
+
+      <!-- Trust banner -->
+      <div style="background:rgba(0,212,170,0.07);border:1px solid rgba(0,212,170,0.18);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;">
+        <span style="font-size:18px;flex-shrink:0;">🔒</span>
+        <p style="font-size:13px;color:var(--text2);line-height:1.55;margin:0;">HydroEthio uses your camera <strong style="color:var(--accent)">only to detect light changes</strong> through your fingertip. <strong style="color:var(--accent)">No images are recorded, stored, or shared</strong> — ever.</p>
+      </div>
+      <!-- Controls -->
+      <div class="hb-controls">
+        <button class="hb-btn hb-btn-start" id="hbStartBtn" onclick="hbStart()">▶ Start</button>
+        <button class="hb-btn hb-btn-stop" id="hbStopBtn" onclick="hbStop()" disabled>⏹ Stop</button>
+      </div>
+    </div>
+
+    <!-- How to use -->
+    <div class="hb-tip">
+      <span class="insight-icon">☝</span>
+      <p><strong>How to use:</strong> Place your fingertip gently over the rear camera lens. The flash will turn on automatically. Keep still for 30 seconds. Blood pulsing through your fingertip changes brightness — the app counts those changes to calculate your BPM.</p>
+    </div>
+
+    <!-- Measurement history -->
+    <div class="card" id="hbHistCard" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">Recent readings</div>
+        <div onclick="hbClearHistory()" style="font-size:11px;color:var(--text3);cursor:pointer;padding:4px 8px;border:1px solid var(--border);border-radius:8px;">Clear</div>
+      </div>
+      <div id="hbHistList"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Bottom nav -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-calc" onclick="showScreen('calc')">
+    <span class="nav-icon">💧</span><span class="nav-label">Calculator</span>
+  </div>
+  <div class="nav-item" id="nav-brands" onclick="showScreen('brands')">
+    <span class="nav-icon">📊</span><span class="nav-label">Brands</span>
+  </div>
+  <div class="nav-item" id="nav-science" onclick="showScreen('science')">
+    <span class="nav-icon">🏃</span><span class="nav-label">Move</span>
+  </div>
+  <div class="nav-item" id="nav-heart" onclick="showScreen('heart')">
+    <span class="nav-icon">❤</span><span class="nav-label">Heart</span>
+  </div>
+</div>
+
+<script>
+/* ── Nav ── */
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ── Profile ── */
+var profileOpen = false;
+function toggleProfile() {
+  profileOpen = !profileOpen;
+  document.getElementById('profile-body').classList.toggle('open', profileOpen);
+  document.getElementById('profile-toggle').classList.toggle('open', profileOpen);
+}
+
+function updateChips() {
+  var w = document.getElementById('sl-weight').value;
+  document.getElementById('chip-weight').textContent = w + ' kg';
+  var actMap={'1.0':'Sedentary','1.3':'Light','1.6':'Active','2.0':'Very active'};
+  var cliMap={'1.0':'Highlands','1.2':'Warm','1.4':'Hot','1.6':'Very hot'};
+  var fasMap={'1.0':'No fast','1.15':'Occasional','1.25':'Orthodox','1.35':'Ramadan'};
+  var golMap={'general':'General','athlete':'Athlete','weight':'Weight','heart':'Heart','bones':'Bones'};
+  document.getElementById('chip-activity').textContent = actMap[document.getElementById('sel-activity').value]||'';
+  document.getElementById('chip-climate').textContent  = cliMap[document.getElementById('sel-climate').value]||'';
+  document.getElementById('chip-fasting').textContent  = fasMap[document.getElementById('sel-fasting').value]||'';
+  document.getElementById('chip-goal').textContent     = golMap[document.getElementById('sel-goal').value]||'';
+}
+
+function onSlide() {
+  document.getElementById('w-out').textContent = document.getElementById('sl-weight').value + ' kg';
+  calculate(); updateChips();
+}
+
+function calculate() {
+  var w=parseInt(document.getElementById('sl-weight').value);
+  var act=parseFloat(document.getElementById('sel-activity').value);
+  var cli=parseFloat(document.getElementById('sel-climate').value);
+  var fas=parseFloat(document.getElementById('sel-fasting').value);
+  var goal=document.getElementById('sel-goal').value;
+  var total=Math.round(w*0.033*act*cli*fas*10)/10;
+  var glasses=Math.round(total/0.25);
+  document.getElementById('m-water').textContent=total.toFixed(1);
+  document.getElementById('m-glasses').textContent=glasses;
+  var sw=act*cli*fas;
+  var ca=Math.min(Math.round(60+(sw-1)*40),200);
+  var mg=Math.min(Math.round(20+(sw-1)*20),80);
+  var k=Math.min(Math.round(8+(sw-1)*12),30);
+  var na=Math.min(Math.round(10+(sw-1)*15),40);
+  var bi=Math.min(Math.round(80+(sw-1)*60),300);
+  if(goal==='athlete'){ca+=20;mg+=10;k+=5;na+=10;}
+  if(goal==='heart'){mg+=15;k+=8;na=Math.max(5,na-5);}
+  if(goal==='bones'){ca+=30;mg+=10;bi+=20;}
+  if(goal==='weight'){bi+=10;}
+  ca=Math.min(ca,200);mg=Math.min(mg,80);k=Math.min(k,30);na=Math.min(na,40);bi=Math.min(bi,300);
+  document.getElementById('v-ca').textContent=ca+' mg/L';
+  document.getElementById('v-mg').textContent=mg+' mg/L';
+  document.getElementById('v-k').textContent=k+' mg/L';
+  document.getElementById('v-na').textContent=na+' mg/L';
+  document.getElementById('v-bi').textContent=bi+' mg/L';
+  document.getElementById('b-ca').style.width=Math.round((ca/200)*100)+'%';
+  document.getElementById('b-mg').style.width=Math.round((mg/80)*100)+'%';
+  document.getElementById('b-k').style.width=Math.round((k/30)*100)+'%';
+  document.getElementById('b-na').style.width=Math.round((na/40)*100)+'%';
+  document.getElementById('b-bi').style.width=Math.round((bi/300)*100)+'%';
+  var insights={
+    general:'For your profile, balanced mineral water with TDS 100–300 mg/L is ideal. Ambo mineral water is currently the closest Ethiopian brand to WHO standards.',
+    athlete:'Athletes lose significant calcium, magnesium and potassium through sweat. Plain water is not enough. You need electrolyte water or mineral sachets for proper recovery.',
+    weight:'Good hydration boosts metabolism and reduces appetite. Bicarbonate-rich water supports digestion. Avoid sugary drinks — stick to natural mineral water.',
+    heart:'Magnesium and potassium are critical for heart health. Look for water high in these minerals and low in sodium. WHO recommends under 20 mg/L sodium in drinking water.',
+    bones:'Calcium and magnesium from water are highly bioavailable for bone health. You need 80–150 mg/L calcium. This matters most for children, women, and older adults.'
+  };
+  document.getElementById('insight-text').textContent=insights[goal];
+  updateChips();
+}
+
+function ask(q) {
+  alert('Question: '+q+'\n\n(In Telegram this sends to your bot for AI response)');
+}
+
+calculate();
+
+/* ── GPS Tracker (simplified) ── */
+var selectedType={val:'run',met:9.8,icon:'🏃',label:'Run'};
+var workouts=[];
+var gpsWatchId=null,gpsCoords=[],gpsStartTime=null,gpsTimerTick=null,gpsTotalDist=0,gpsRunning=false;
+var typeIcons={run:'🏃',walk:'🚶',cycle:'🚴',gym:'🏋️',swim:'🏊'};
+var typeLabels={run:'Run',walk:'Walk',cycle:'Cycle',gym:'Gym',swim:'Swim'};
+function selectType(el){
+  document.querySelectorAll('.type-pill').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  selectedType={val:el.dataset.val,met:parseFloat(el.dataset.met),icon:typeIcons[el.dataset.val],label:typeLabels[el.dataset.val]};
+}
+function isIndoor(){return['gym'].indexOf(selectedType.val)!==-1;}
+function startGPS(){
+  var errEl=document.getElementById('gps-error');errEl.style.display='none';
+  gpsCoords=[];gpsTotalDist=0;gpsStartTime=Date.now();gpsRunning=true;
+  document.getElementById('btn-start').style.display='none';
+  document.getElementById('btn-stop').style.display='block';
+  document.getElementById('gps-placeholder').style.display='none';
+  gpsTimerTick=setInterval(function(){updateTimer();},1000);
+  setBadge('🔴 Tracking','var(--danger)');
+  if(!navigator.geolocation){showGPSError('GPS not supported.');stopGPS();return;}
+  gpsWatchId=navigator.geolocation.watchPosition(onGPSPosition,onGPSError,{enableHighAccuracy:true,maximumAge:2000,timeout:10000});
+}
+function onGPSPosition(pos){
+  if(!gpsRunning)return;
+  var pt={lat:pos.coords.latitude,lng:pos.coords.longitude,ts:Date.now()};
+  if(gpsCoords.length>0){var prev=gpsCoords[gpsCoords.length-1];var d=haversine(prev.lat,prev.lng,pt.lat,pt.lng);if(d>=2&&d<=200)gpsTotalDist+=d;}
+  gpsCoords.push(pt);
+  document.getElementById('gps-dist').textContent=(gpsTotalDist/1000).toFixed(2);
+  var elapsed=(Date.now()-gpsStartTime)/60000;
+  if(gpsTotalDist>100){var paceMin=elapsed/(gpsTotalDist/1000);var pMin=Math.floor(paceMin);var pSec=Math.round((paceMin-pMin)*60);document.getElementById('gps-pace').textContent=pMin+':'+(pSec<10?'0':'')+pSec;}
+  drawRoute();moveLiveDot();
+}
+function onGPSError(err){
+  var msgs={1:'Location permission denied.',2:'GPS signal not available.',3:'GPS timed out.'};
+  showGPSError(msgs[err.code]||'GPS error.');stopGPS();
+}
+function stopGPS(){
+  if(!gpsRunning&&gpsCoords.length===0)return;
+  gpsRunning=false;
+  if(gpsWatchId!==null){navigator.geolocation.clearWatch(gpsWatchId);gpsWatchId=null;}
+  if(gpsTimerTick){clearInterval(gpsTimerTick);gpsTimerTick=null;}
+  document.getElementById('btn-start').style.display='block';
+  document.getElementById('btn-stop').style.display='none';
+  setBadge('Finished','var(--accent)');
+  document.getElementById('live-dot').style.display='none';
+  if(gpsCoords.length<2){showGPSError('Not enough GPS points. Try again in an open area.');return;}
+  var dur=Math.max(1,Math.round((Date.now()-gpsStartTime)/60000));
+  var distKm=parseFloat((gpsTotalDist/1000).toFixed(2));
+  var weight=parseFloat(document.getElementById('sl-weight').value)||70;
+  var cal=Math.round(selectedType.met*weight*(dur/60));
+  var waterEx=Math.round((dur/30)*0.5*(selectedType.met/7)*10)/10;
+  var entry={type:selectedType.val,icon:selectedType.icon,label:selectedType.label,duration:dur,distance:distKm,calories:cal,water:waterEx,intensity:'GPS tracked',time:new Date().toLocaleTimeString('en-ET',{hour:'2-digit',minute:'2-digit'}),date:new Date().toLocaleDateString('en-ET',{weekday:'short',month:'short',day:'numeric'})};
+  workouts.unshift(entry);renderHistory();updateSummary();
+}
+function updateTimer(){if(!gpsStartTime)return;var elapsed=Math.floor((Date.now()-gpsStartTime)/1000);var m=Math.floor(elapsed/60);var s=elapsed%60;var el=document.getElementById('gps-time');if(el)el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+function clearCanvas(){var c=document.getElementById('route-canvas');if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);}
+function drawRoute(){var canvas=document.getElementById('route-canvas');if(!canvas||gpsCoords.length<2)return;var ctx=canvas.getContext('2d');var W=canvas.width,H=canvas.height;var lats=gpsCoords.map(function(p){return p.lat;});var lngs=gpsCoords.map(function(p){return p.lng;});var minLat=Math.min.apply(null,lats),maxLat=Math.max.apply(null,lats),minLng=Math.min.apply(null,lngs),maxLng=Math.max.apply(null,lngs);var pad=20;function toX(lng){return maxLng===minLng?W/2:pad+(lng-minLng)/(maxLng-minLng)*(W-pad*2);}function toY(lat){return maxLat===minLat?H/2:pad+(maxLat-lat)/(maxLat-minLat)*(H-pad*2);}ctx.clearRect(0,0,W,H);ctx.beginPath();ctx.moveTo(toX(gpsCoords[0].lng),toY(gpsCoords[0].lat));for(var i=1;i<gpsCoords.length;i++)ctx.lineTo(toX(gpsCoords[i].lng),toY(gpsCoords[i].lat));ctx.strokeStyle='#00d4aa';ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';ctx.stroke();ctx.beginPath();ctx.arc(toX(gpsCoords[0].lng),toY(gpsCoords[0].lat),6,0,Math.PI*2);ctx.fillStyle='#00d4aa';ctx.fill();}
+function moveLiveDot(){var canvas=document.getElementById('route-canvas');var dot=document.getElementById('live-dot');if(!canvas||!dot||gpsCoords.length===0)return;var lats=gpsCoords.map(function(p){return p.lat;});var lngs=gpsCoords.map(function(p){return p.lng;});var minLat=Math.min.apply(null,lats),maxLat=Math.max.apply(null,lats),minLng=Math.min.apply(null,lngs),maxLng=Math.max.apply(null,lngs);var pad=20,W=canvas.clientWidth,H=canvas.clientHeight;var last=gpsCoords[gpsCoords.length-1];var x=maxLng===minLng?W/2:pad+(last.lng-minLng)/(maxLng-minLng)*(W-pad*2);var y=maxLat===minLat?H/2:pad+(maxLat-last.lat)/(maxLat-minLat)*(H-pad*2);dot.style.display='block';dot.style.left=x+'px';dot.style.top=y+'px';}
+function setBadge(text,color){var b=document.getElementById('gps-status-badge');if(b){b.textContent=text;b.style.color=color;}}
+function showGPSError(msg){var el=document.getElementById('gps-error');if(el){el.style.display='block';el.textContent='⚠ '+msg;}}
+function haversine(lat1,lng1,lat2,lng2){var R=6371000;var dLat=(lat2-lat1)*Math.PI/180;var dLng=(lng2-lng1)*Math.PI/180;var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function renderHistory(){var list=document.getElementById('history-list');var card=document.getElementById('history-card');if(!list||!card)return;if(workouts.length===0){card.style.display='none';return;}card.style.display='block';list.innerHTML=workouts.map(function(w){var distStr=w.distance?' · '+w.distance+' km':'';return '<div class="history-item"><div class="history-icon">'+w.icon+'</div><div class="history-info"><div class="history-name">'+w.label+'</div><div class="history-meta">'+w.date+' · '+w.time+' · '+w.duration+' min'+distStr+'</div></div><div class="history-right"><div class="history-cal">'+w.calories+' kcal</div><div class="history-water">+'+w.water+'L</div></div></div>';}).join('');}
+function updateSummary(){var c=document.getElementById('t-count');var w=document.getElementById('t-water-extra');if(c)c.textContent=workouts.length;if(w){var total=workouts.reduce(function(s,x){return s+x.water;},0);w.textContent='+'+(Math.round(total*10)/10);}}
+function clearHistory(){workouts=[];renderHistory();updateSummary();}
+
+/* ════════════════════════════════════
+   HEARTBEAT TRACKER — Fixed v2
+════════════════════════════════════ */
+var hbStream = null;
+var hbMeasuring = false;
+var hbSampleInterval = null;
+var hbRedValues = [];
+var hbWaveData = [];
+var hbStartTime = null;
+var hbAnimFrame = null;
+var hbHistory = [];
+var HB_DURATION = 30000;   // 30 sec total
+var HB_SAMPLE_MS = 40;     // ~25 fps sampling
+
+var hbWaveCanvas = document.getElementById('hbWaveCanvas');
+var hbWaveCtx = hbWaveCanvas.getContext('2d');
+
+function hbResizeWave() {
+  hbWaveCanvas.width  = hbWaveCanvas.offsetWidth  * (window.devicePixelRatio||1);
+  hbWaveCanvas.height = hbWaveCanvas.offsetHeight * (window.devicePixelRatio||1);
+}
+hbResizeWave();
+window.addEventListener('resize', hbResizeWave);
+
+function hbShowErr(msg) { var e=document.getElementById('hbErr'); e.textContent=msg; e.style.display='block'; }
+function hbHideErr()    { document.getElementById('hbErr').style.display='none'; }
+
+async function hbStart() {
+  hbHideErr();
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    hbShowErr('Camera not supported in this browser / WebView.'); return;
+  }
+  try {
+    // Request rear camera
+    hbStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal:'environment' }, width:{ideal:160}, height:{ideal:120}, frameRate:{ideal:30} }
+    });
+
+    // Try to turn on torch (flashlight) — works on Android Chrome & Telegram WebView
+    var track = hbStream.getVideoTracks()[0];
+    var caps = track.getCapabilities ? track.getCapabilities() : {};
+    if(caps.torch) {
+      try { await track.applyConstraints({ advanced:[{ torch:true }] }); } catch(e){}
+    }
+
+    var vid = document.getElementById('hbVideo');
+    vid.srcObject = hbStream;
+    vid.onloadedmetadata = function(){ vid.play(); };
+    // Also try play() directly for WebViews that don't fire onloadedmetadata
+    try { await vid.play(); } catch(e){}
+
+    hbRedValues=[]; hbWaveData=[]; hbStartTime=Date.now(); hbMeasuring=true;
+    document.getElementById('hbStartBtn').disabled=true;
+    document.getElementById('hbStopBtn').disabled=false;
+    document.getElementById('hbRingBorder').classList.add('active');
+    document.getElementById('hbBpmNum').classList.add('active');
+    document.getElementById('hbBpmNum').textContent='--';
+    document.getElementById('hbZoneBadge').style.display='none';
+    hbSetStatus('Hold finger over lens… detecting pulse','measuring');
+
+    hbSampleInterval = setInterval(hbSampleFrame, HB_SAMPLE_MS);
+    hbAnimFrame = requestAnimationFrame(hbDrawWave);
+    setTimeout(function(){ if(hbMeasuring) hbFinalize(); }, HB_DURATION);
+
+  } catch(e) {
+    var msg = '📷 HydroEthio needs a quick camera peek to measure your pulse — no photos are taken or stored.';
+    if(e && e.name === 'NotFoundError') msg = '📷 We could not find your rear camera. Make sure no other app is using it and try again.';
+    else if(e && e.name === 'NotAllowedError') msg = '🔒 Camera access is needed only to detect your heartbeat through your fingertip — your privacy is 100% protected. No images are saved. Please tap Allow when prompted, or enable Camera in your phone Settings → Apps → Telegram → Permissions.';
+    hbShowErr(msg);
+  }
+}
+
+function hbSampleFrame() {
+  if(!hbMeasuring) return;
+  var elapsed = Date.now() - hbStartTime;
+  var progress = Math.min(elapsed / HB_DURATION, 1);
+  document.getElementById('hbProgressCircle').style.strokeDashoffset = 314*(1-progress);
+
+  var vid = document.getElementById('hbVideo');
+  if(vid.readyState < 2) return; // video not ready yet
+
+  // Sample a larger 16×16 area for better signal quality
+  var canvas = document.getElementById('hbCaptureCanvas');
+  canvas.width = 16; canvas.height = 16;
+  var ctx = canvas.getContext('2d');
+  try { ctx.drawImage(vid, 0, 0, 16, 16); } catch(e){ return; }
+  var px = ctx.getImageData(0, 0, 16, 16).data;
+
+  // Average the RED channel only (index 0 of every 4 bytes)
+  var totalR=0, totalG=0, count=0;
+  for(var i=0; i<px.length; i+=4){ totalR+=px[i]; totalG+=px[i+1]; count++; }
+  var avgR = totalR/count;
+  var avgG = totalG/count;
+
+  // Check if finger is actually covering lens:
+  // When covered + torch ON → RED is very high (>180), GREEN is low
+  var fingerDetected = (avgR > 100 && avgR > avgG * 1.5);
+
+  hbRedValues.push({ t:elapsed, v:avgR });
+  hbWaveData.push(avgR);
+  if(hbWaveData.length > 300) hbWaveData.shift();
+
+  // Live status feedback
+  if(elapsed < 3000) {
+    if(!fingerDetected) {
+      hbSetStatus('⚠ Cover the lens fully with your fingertip','measuring');
+    } else {
+      hbSetStatus('✓ Finger detected — keep very still…','measuring');
+    }
+  } else if(elapsed > 7000 && hbRedValues.length > 80) {
+    var bpm = hbEstimateBPM(hbRedValues);
+    if(bpm > 0) {
+      document.getElementById('hbBpmNum').textContent = bpm;
+      hbSetStatus('Reading pulse… ' + Math.round(elapsed/1000) + 's / 30s','measuring');
+    } else if(!fingerDetected) {
+      hbSetStatus('⚠ Keep your finger on the lens!','measuring');
+    } else {
+      hbSetStatus('Analysing signal… keep still','measuring');
+    }
+  }
+}
+
+/* ── BPM Engine: detrend → bandpass → autocorrelation ── */
+function hbEstimateBPM(samples) {
+  if(samples.length < 60) return 0;
+  var vals = samples.map(function(s){ return s.v; });
+  var n = vals.length;
+
+  // 1. Check variance — flat signal = finger not covering
+  var mean = vals.reduce(function(a,b){return a+b;},0)/n;
+  var variance = vals.reduce(function(a,b){return a+(b-mean)*(b-mean);},0)/n;
+  if(variance < 0.08) return 0;
+
+  // 2. Detrend: subtract a slow moving average to remove brightness drift
+  var trend = [], tWin = Math.round(n * 0.4);
+  for(var i=0; i<n; i++){
+    var s = Math.max(0,i-tWin), e = Math.min(n-1,i+tWin);
+    var sum=0; for(var j=s;j<=e;j++) sum+=vals[j];
+    trend.push(sum/(e-s+1));
+  }
+  var detrended = vals.map(function(v,i){ return v - trend[i]; });
+
+  // 3. Bandpass: keep only 40–200 BPM frequencies
+  // Estimate sample rate from timestamps
+  var totalMs = samples[n-1].t - samples[0].t;
+  var fps = (n-1) / (totalMs/1000); // samples per second
+  // Low-pass (smooth) then subtract another smooth = bandpass
+  function smooth(arr, win){
+    var out=[];
+    for(var i=0;i<arr.length;i++){
+      var s=Math.max(0,i-win),e=Math.min(arr.length-1,i+win),sum=0;
+      for(var j=s;j<=e;j++) sum+=arr[j];
+      out.push(sum/(e-s+1));
+    }
+    return out;
+  }
+  // winLow keeps up to ~3 Hz (180 BPM), winHigh removes below ~0.5 Hz (30 BPM)
+  var winLow  = Math.max(1, Math.round(fps / 6));   // low-pass
+  var winHigh = Math.max(1, Math.round(fps / 1.2)); // trend removal
+  var lp   = smooth(detrended, winLow);
+  var hp   = smooth(detrended, winHigh);
+  var band = lp.map(function(v,i){ return v - hp[i]; });
+
+  // 4. Autocorrelation — search 55–165 BPM range ONLY
+  // By restricting lagMax to 60/55 BPM, we PREVENT the algorithm from
+  // ever picking a lag that corresponds to <55 BPM, eliminating octave errors entirely.
+  var lagMin = Math.max(2, Math.round(fps * 60/165));  // 165 BPM max
+  var lagMax = Math.min(band.length - 1, Math.round(fps * 60/55)); // 55 BPM min
+  if(lagMin >= lagMax) return 0;
+
+  function autoCorr(arr, lag){
+    var s=0, cnt=0;
+    for(var i=0;i<arr.length-lag;i++){ s+=arr[i]*arr[i+lag]; cnt++; }
+    return cnt>0 ? s/cnt : 0;
+  }
+
+  // Find best lag within 55–165 BPM window
+  var bestLag = lagMin, bestCorr = autoCorr(band, lagMin);
+  for(var lag=lagMin+1; lag<=lagMax; lag++){
+    var c = autoCorr(band, lag);
+    if(c > bestCorr){ bestCorr=c; bestLag=lag; }
+  }
+  if(bestCorr <= 0) return 0;
+
+  // Sub-sample refinement: ±3 samples around bestLag
+  var refinedLag = bestLag, refinedCorr = bestCorr;
+  for(var dl=-3; dl<=3; dl++){
+    var tl = bestLag + dl;
+    if(tl < lagMin || tl > lagMax) continue;
+    var tc = autoCorr(band, tl);
+    if(tc > refinedCorr){ refinedCorr=tc; refinedLag=tl; }
+  }
+
+  var periodMs = (refinedLag / fps) * 1000;
+  var bpm = Math.round(60000 / periodMs);
+  return (bpm >= 55 && bpm <= 165) ? bpm : 0;
+}
+
+function hbDrawWave() {
+  if(!hbMeasuring) return;
+  var W = hbWaveCanvas.offsetWidth;
+  var H = hbWaveCanvas.offsetHeight;
+  var scl = window.devicePixelRatio||1;
+  hbWaveCtx.clearRect(0, 0, hbWaveCanvas.width, hbWaveCanvas.height);
+
+  if(hbWaveData.length < 2){ hbAnimFrame=requestAnimationFrame(hbDrawWave); return; }
+
+  var mn = Math.min.apply(null,hbWaveData);
+  var mx = Math.max.apply(null,hbWaveData);
+  var rng = mx - mn || 1;
+
+  // Grid lines
+  hbWaveCtx.strokeStyle='rgba(255,255,255,0.05)';
+  hbWaveCtx.lineWidth=0.5*scl;
+  for(var i=1;i<4;i++){
+    hbWaveCtx.beginPath();
+    hbWaveCtx.moveTo(0,(i/4)*H*scl);
+    hbWaveCtx.lineTo(W*scl,(i/4)*H*scl);
+    hbWaveCtx.stroke();
+  }
+
+  // Pulse wave — glow effect
+  hbWaveCtx.shadowColor='rgba(255,77,109,0.5)';
+  hbWaveCtx.shadowBlur=6*scl;
+  hbWaveCtx.beginPath();
+  hbWaveCtx.strokeStyle='rgba(255,77,109,0.9)';
+  hbWaveCtx.lineWidth=2*scl;
+  hbWaveCtx.lineJoin='round';
+  for(var i=0;i<hbWaveData.length;i++){
+    var x = (i/(hbWaveData.length-1))*W*scl;
+    var y = (H - (((hbWaveData[i]-mn)/rng)*H*0.80 + H*0.10))*scl;
+    i===0 ? hbWaveCtx.moveTo(x,y) : hbWaveCtx.lineTo(x,y);
+  }
+  hbWaveCtx.stroke();
+  hbWaveCtx.shadowBlur=0;
+
+  hbAnimFrame = requestAnimationFrame(hbDrawWave);
+}
+
+function hbStop() {
+  if(hbRedValues.length > 40) hbFinalize();
+  else { hbCleanup(); hbSetStatus('Measurement cancelled',''); }
+}
+
+function hbFinalize() {
+  var bpm = hbEstimateBPM(hbRedValues);
+  hbCleanup();
+  document.getElementById('hbProgressCircle').style.strokeDashoffset=314;
+  if(bpm > 0){
+    document.getElementById('hbBpmNum').textContent=bpm;
+    document.getElementById('hbBpmNum').classList.remove('active');
+    hbSetStatus('Measurement complete ✓','ok');
+    hbShowZone(bpm);
+    hbSaveHistory(bpm);
+  } else {
+    document.getElementById('hbBpmNum').textContent='--';
+    document.getElementById('hbBpmNum').classList.remove('active');
+    hbSetStatus('Could not detect pulse — try again','');
+    hbShowErr('Tips: ① Cover the lens completely with your fingertip ② Press gently — not too hard ③ Stay very still ④ Make sure the flashlight turns on (bright red glow)');
+  }
+}
+
+function hbCleanup() {
+  hbMeasuring=false;
+  clearInterval(hbSampleInterval);
+  cancelAnimationFrame(hbAnimFrame);
+  if(hbStream){ hbStream.getTracks().forEach(function(t){ t.stop(); }); hbStream=null; }
+  document.getElementById('hbVideo').srcObject=null;
+  document.getElementById('hbStartBtn').disabled=false;
+  document.getElementById('hbStopBtn').disabled=true;
+  document.getElementById('hbRingBorder').classList.remove('active');
+}
+
+function hbSetStatus(msg, cls) {
+  var el=document.getElementById('hbStatus');
+  el.textContent=msg;
+  el.className='hb-status'+(cls?' '+cls:'');
+}
+
+function hbShowZone(bpm) {
+  var badge=document.getElementById('hbZoneBadge');
+  var z=hbGetZone(bpm);
+  badge.textContent=z.icon+' '+z.label;
+  badge.className='hb-zone-badge '+z.cls;
+  badge.style.display='inline-flex';
+}
+
+function hbGetZone(bpm) {
+  if(bpm<60)  return {label:'Resting',  icon:'😌',cls:'zone-rest'};
+  if(bpm<100) return {label:'Normal',   icon:'💚',cls:'zone-normal'};
+  if(bpm<140) return {label:'Elevated', icon:'⚡',cls:'zone-elevated'};
+  return               {label:'High',     icon:'🔥',cls:'zone-high'};
+}
+
+function hbSaveHistory(bpm) {
+  var now=new Date();
+  hbHistory.unshift({bpm:bpm,time:now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  if(hbHistory.length>5) hbHistory.pop();
+  hbRenderHistory();
+}
+
+function hbRenderHistory() {
+  var list=document.getElementById('hbHistList');
+  var card=document.getElementById('hbHistCard');
+  if(hbHistory.length===0){card.style.display='none';return;}
+  card.style.display='block';
+  list.innerHTML=hbHistory.map(function(h){
+    var z=hbGetZone(h.bpm);
+    return '<div class="hb-history-item">'+
+      '<div><div class="hb-hist-bpm">'+h.bpm+' <span style="font-size:14px;color:var(--text3)">BPM</span></div>'+
+      '<div class="hb-hist-meta">'+h.time+'</div></div>'+
+      '<span class="hb-hist-zone '+z.cls+'">'+z.icon+' '+z.label+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+function hbClearHistory() { hbHistory=[]; hbRenderHistory(); }
+</script>
+</body>
+</html>
