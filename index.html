@@ -2,556 +2,414 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"/>
+<meta name="theme-color" content="#0f0f13"/>
 <title>Finance Tracker</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #0f0f13;
-    --bg2: #18181f;
-    --bg3: #22222c;
-    --card: #1e1e27;
-    --border: rgba(255,255,255,0.07);
-    --text: #f0f0f5;
-    --muted: #8888a0;
-    --accent: #6c63ff;
-    --accent2: #9c94ff;
-    --c-food:    #1D9E75;
-    --c-trans:   #378ADD;
-    --c-coffee:  #D4854A;
-    --c-self:    #C065C8;
-    --c-social:  #D4537E;
-    --c-gym:     #E8A020;
-    --c-entert:  #D85A30;
-    --c-invest:  #4DA8DA;
-    --c-work:    #6A9E5B;
-    --radius: 14px;
-    --radius-sm: 8px;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body {
-    background: var(--bg); color: var(--text);
-    font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif;
-    min-height: 100vh; overscroll-behavior: none;
-  }
-  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-  .screen { display: none; flex: 1; overflow-y: auto; padding: 0 0 80px; }
-  .screen.active { display: block; }
+:root{
+  --bg:#0f0f13;--bg2:#18181f;--bg3:#22222c;--card:#1e1e27;
+  --border:rgba(255,255,255,.07);--text:#f0f0f5;--muted:#8888a0;
+  --accent:#6c63ff;--accent2:#9c94ff;
+  --c-food:#1D9E75;--c-trans:#378ADD;--c-coffee:#D4854A;--c-self:#C065C8;
+  --c-social:#D4537E;--c-gym:#E8A020;--c-entert:#D85A30;--c-work:#4DA8DA;
+  --r:14px;--rs:8px;
+  --sab:env(safe-area-inset-bottom,0px);
+  --sat:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;height:100%;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
 
-  /* ── Nav ── */
-  .nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: var(--bg2); border-top: 1px solid var(--border);
-    display: flex; padding-bottom: var(--safe-bottom); z-index: 100;
-  }
-  .nav-btn {
-    flex: 1; background: none; border: none; color: var(--muted);
-    padding: 10px 4px 8px; display: flex; flex-direction: column;
-    align-items: center; gap: 3px; font-size: 10px; font-weight: 500;
-    cursor: pointer; transition: color .15s;
-  }
-  .nav-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .nav-btn.active { color: var(--accent2); }
-  .nav-btn.active svg { stroke: var(--accent2); }
+/* screens */
+.scr{display:none;flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(68px + var(--sab))}
+.scr.on{display:block}
 
-  /* ── Header ── */
-  .screen-header {
-    padding: 18px 16px 12px; position: sticky; top: 0;
-    background: var(--bg); z-index: 10; border-bottom: 1px solid var(--border);
-  }
-  .screen-header h1 { font-size: 20px; font-weight: 700; }
-  .screen-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+/* header */
+.hdr{padding:calc(14px + var(--sat)) 16px 12px;position:sticky;top:0;background:var(--bg);z-index:10;border-bottom:1px solid var(--border)}
+.hdr h1{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.hdr p{font-size:12px;color:var(--muted);margin-top:2px}
 
-  /* ── Metrics ── */
-  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px; }
-  .metric-card { background: var(--card); border-radius: var(--radius); padding: 14px; border: 1px solid var(--border); }
-  .metric-card.wide { grid-column: span 2; }
-  .metric-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-  .metric-val { font-size: 24px; font-weight: 700; }
-  .metric-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+/* bottom nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);display:flex;padding-bottom:var(--sab);z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.nb{flex:1;background:none;border:none;color:var(--muted);padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;cursor:pointer;transition:color .15s;-webkit-appearance:none}
+.nb svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nb.on{color:var(--accent2)}
+.nb.on svg{stroke:var(--accent2)}
 
-  /* ── Add form ── */
-  .add-wrap { padding: 0 16px; }
-  .amount-input-wrap {
-    background: var(--card); border-radius: var(--radius);
-    padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); text-align: center;
-  }
-  .amount-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-  .amount-field {
-    font-size: 42px; font-weight: 700; color: var(--text);
-    background: none; border: none; width: 100%; text-align: center;
-    outline: none; caret-color: var(--accent2);
-  }
-  .amount-field::placeholder { color: var(--bg3); }
+/* metrics */
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.mc{background:var(--card);border-radius:var(--r);padding:14px;border:1px solid var(--border)}
+.ml{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.mv{font-size:22px;font-weight:700}
+.ms{font-size:12px;color:var(--muted);margin-top:2px}
 
-  /* ── Two-column category grid ── */
-  .cats-section { margin-bottom: 16px; }
-  .cats-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
-  .cats-col-header {
-    font-size: 10px; font-weight: 700; color: var(--muted);
-    text-transform: uppercase; letter-spacing: .6px;
-    margin-bottom: 6px; padding: 0 2px;
-  }
-  .cats-col { display: flex; flex-direction: column; gap: 6px; }
-  .cat-btn {
-    background: var(--card); border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm); padding: 10px 10px;
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; font-weight: 500; color: var(--muted);
-    cursor: pointer; transition: all .15s; text-align: left; width: 100%;
-  }
-  .cat-btn .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .cat-btn.active { color: var(--text); border-width: 2px; }
-  .cat-btn[data-cat="Food & Water"].active      { border-color: var(--c-food);   background: rgba(29,158,117,.12); }
-  .cat-btn[data-cat="Transportation"].active    { border-color: var(--c-trans);  background: rgba(55,138,221,.12); }
-  .cat-btn[data-cat="Coffee & Sweets"].active   { border-color: var(--c-coffee); background: rgba(212,133,74,.12); }
-  .cat-btn[data-cat="Self Care"].active         { border-color: var(--c-self);   background: rgba(192,101,200,.12); }
-  .cat-btn[data-cat="Social & Family"].active            { border-color: var(--c-social); background: rgba(212,83,126,.12); }
-  .cat-btn[data-cat="Gym & Health"].active      { border-color: var(--c-gym);    background: rgba(232,160,32,.12); }
-  .cat-btn[data-cat="Entertainment"].active     { border-color: var(--c-entert); background: rgba(216,90,48,.12); }
-  .cat-btn[data-cat="Work & Future Cash"].active { border-color: var(--c-invest); background: rgba(77,168,218,.12); }
+/* add form */
+.aw{padding:14px 16px 0}
+.abox{background:var(--card);border-radius:var(--r);padding:20px 16px;margin-bottom:14px;border:1px solid var(--border);text-align:center}
+.albl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.afld{font-size:44px;font-weight:700;color:var(--text);background:none;border:none;width:100%;text-align:center;outline:none;caret-color:var(--accent2);font-family:inherit}
+.afld::placeholder{color:var(--bg3)}
 
-  /* ── Form card ── */
-  .form-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 14px; }
-  .form-row { display: flex; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); }
-  .form-row:last-child { border-bottom: none; }
-  .form-row-label { font-size: 13px; color: var(--muted); width: 70px; flex-shrink: 0; }
-  .form-row input, .form-row select { flex: 1; background: none; border: none; color: var(--text); font-size: 14px; outline: none; text-align: right; font-family: inherit; }
-  .form-row select option { background: var(--bg2); }
+/* two-col cats */
+.cc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.cch{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;padding:0 2px}
+.col{display:flex;flex-direction:column;gap:6px}
+.cb{background:var(--card);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;text-align:left;width:100%;-webkit-appearance:none}
+.cb .d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cb.on{color:var(--text);border-width:2px}
+.cb[data-c="Food & Water"].on   {border-color:var(--c-food);  background:rgba(29,158,117,.12)}
+.cb[data-c="Transportation"].on {border-color:var(--c-trans); background:rgba(55,138,221,.12)}
+.cb[data-c="Coffee & Sweets"].on{border-color:var(--c-coffee);background:rgba(212,133,74,.12)}
+.cb[data-c="Self Care"].on      {border-color:var(--c-self);  background:rgba(192,101,200,.12)}
+.cb[data-c="Social & Family"].on{border-color:var(--c-social);background:rgba(212,83,126,.12)}
+.cb[data-c="Gym & Health"].on   {border-color:var(--c-gym);   background:rgba(232,160,32,.12)}
+.cb[data-c="Entertainment"].on  {border-color:var(--c-entert);background:rgba(216,90,48,.12)}
+.cb[data-c="Work & Future Cash"].on{border-color:var(--c-work);background:rgba(77,168,218,.12)}
 
-  .save-btn {
-    width: 100%; background: var(--accent); color: #fff;
-    border: none; border-radius: var(--radius);
-    padding: 15px; font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: opacity .15s; margin-bottom: 10px;
-  }
-  .save-btn:active { opacity: .8; }
+/* form card */
+.fc{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;margin-bottom:14px}
+.fr{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border)}
+.fr:last-child{border-bottom:none}
+.frl{font-size:13px;color:var(--muted);width:64px;flex-shrink:0}
+.fr input,.fr select{flex:1;background:none;border:none;color:var(--text);font-size:14px;outline:none;text-align:right;font-family:inherit;-webkit-appearance:none}
+.fr select option{background:var(--bg2)}
 
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: #1D9E75; color: #fff; padding: 10px 24px; border-radius: 30px;
-    font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
-    transition: opacity .25s; z-index: 999; white-space: nowrap;
-  }
-  .toast.show { opacity: 1; }
+/* save btn */
+.sbtn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--r);padding:15px;font-size:15px;font-weight:600;cursor:pointer;transition:opacity .15s;font-family:inherit;-webkit-appearance:none}
+.sbtn:active{opacity:.8}
 
-  /* ── History ── */
-  .filter-bar { display: flex; gap: 8px; padding: 10px 16px; overflow-x: auto; scrollbar-width: none; }
-  .filter-bar::-webkit-scrollbar { display: none; }
-  .filter-pill {
-    flex-shrink: 0; background: var(--card); border: 1px solid var(--border);
-    border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 500;
-    color: var(--muted); cursor: pointer; transition: all .15s; white-space: nowrap;
-  }
-  .filter-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .day-group { padding: 0 16px; margin-bottom: 6px; }
-  .day-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0 6px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-  .exp-item { background: var(--card); border-radius: var(--radius-sm); border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 6px; }
-  .exp-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .exp-body { flex: 1; min-width: 0; }
-  .exp-cat { font-size: 13px; font-weight: 600; }
-  .exp-note { font-size: 12px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .exp-right { text-align: right; flex-shrink: 0; }
-  .exp-amt { font-size: 14px; font-weight: 700; }
-  .exp-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .del-swipe { background: #c0392b; border: none; color: #fff; border-radius: var(--radius-sm); padding: 0 14px; cursor: pointer; font-size: 18px; flex-shrink: 0; height: 60px; }
-  .empty { text-align: center; padding: 48px 16px; color: var(--muted); font-size: 14px; }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+/* toast */
+.toast{position:fixed;bottom:calc(80px + var(--sab));left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:999;white-space:nowrap}
+.toast.on{opacity:1}
 
-  /* ── Charts ── */
-  .section { padding: 0 16px; margin-bottom: 18px; }
-  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
-  .chart-card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; }
-  .chart-wrap { position: relative; }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
-  .month-sel { margin-bottom: 14px; }
-  .month-sel select { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 10px 14px; font-size: 14px; outline: none; font-family: inherit; }
-  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .bar-row-label { font-size: 12px; color: var(--muted); width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar-track { flex: 1; background: var(--bg3); border-radius: 4px; height: 8px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
-  .bar-val { font-size: 11px; color: var(--muted); width: 70px; text-align: right; flex-shrink: 0; }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 4px; }
+/* filter bar */
+.fb{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.fb::-webkit-scrollbar{display:none}
+.fp{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 13px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.fp.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* history */
+.dg{padding:0 16px;margin-bottom:4px}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:10px 0 5px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.ei{background:var(--card);border-radius:var(--rs);border:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:5px}
+.eico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ebody{flex:1;min-width:0}
+.ecat{font-size:13px;font-weight:600}
+.enote{font-size:11px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.eright{text-align:right;flex-shrink:0}
+.eamt{font-size:13px;font-weight:700}
+.edate{font-size:11px;color:var(--muted);margin-top:1px}
+.dbtn{background:#c0392b;border:none;color:#fff;border-radius:var(--rs);padding:0 12px;cursor:pointer;font-size:16px;flex-shrink:0;height:56px;-webkit-appearance:none}
+
+/* empty */
+.empty{text-align:center;padding:48px 16px;color:var(--muted);font-size:14px}
+.eico2{font-size:36px;margin-bottom:10px}
+
+/* analysis */
+.sec{padding:0 16px;margin-bottom:16px}
+.stitle{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.ccard{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:12px}
+.cw{position:relative}
+.leg{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.ld{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.msel{margin-bottom:12px}
+.msel select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);padding:10px 14px;font-size:14px;outline:none;font-family:inherit;-webkit-appearance:none}
+.br{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.brl{font-size:11px;color:var(--muted);width:100px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btrack{flex:1;background:var(--bg3);border-radius:4px;height:7px;overflow:hidden}
+.bfill{height:100%;border-radius:4px;transition:width .4s}
+.bval{font-size:11px;color:var(--muted);width:68px;text-align:right;flex-shrink:0}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- ══ ADD ══ -->
-  <div class="screen active" id="screen-add">
-    <div class="screen-header">
-      <h1>Add Expense</h1>
-      <p id="add-date-display"></p>
+<!-- ADD -->
+<div class="scr on" id="s-add">
+  <div class="hdr"><h1>Add Expense</h1><p id="ddisp"></p></div>
+  <div class="aw">
+    <div class="abox">
+      <div class="albl">Amount (ETB)</div>
+      <input class="afld" id="amt" type="number" inputmode="decimal" placeholder="0" min="0" step="any"/>
     </div>
-    <div class="add-wrap" style="padding-top:14px;">
 
-      <div class="amount-input-wrap">
-        <div class="amount-label">Amount (ETB)</div>
-        <input class="amount-field" id="inp-amount" type="number" inputmode="decimal" placeholder="0" min="0" step="0.01"/>
-      </div>
-
-      <!-- Two-column category layout -->
-      <div class="cats-section">
-        <div class="cats-cols">
-          <!-- LEFT -->
-          <div>
-            <div class="cats-col-header">Essentials</div>
-            <div class="cats-col">
-              <button class="cat-btn" data-cat="Food & Water"><span class="dot" style="background:var(--c-food)"></span>🥗 Food & Water</button>
-              <button class="cat-btn" data-cat="Transportation"><span class="dot" style="background:var(--c-trans)"></span>🚌 Transport</button>
-              <button class="cat-btn" data-cat="Coffee & Sweets"><span class="dot" style="background:var(--c-coffee)"></span>☕ Coffee & Sweets</button>
-              <button class="cat-btn" data-cat="Self Care"><span class="dot" style="background:var(--c-self)"></span>🪥 Self Care</button>
-            </div>
-          </div>
-          <!-- RIGHT -->
-          <div>
-            <div class="cats-col-header">Lifestyle</div>
-            <div class="cats-col">
-              <button class="cat-btn" data-cat="Social &amp; Family"><span class="dot" style="background:var(--c-social)"></span>👥 Social & Family</button>
-              <button class="cat-btn" data-cat="Gym & Health"><span class="dot" style="background:var(--c-gym)"></span>🏋️ Gym & Health</button>
-              <button class="cat-btn" data-cat="Entertainment"><span class="dot" style="background:var(--c-entert)"></span>🎬 Entertainment</button>
-              <button class="cat-btn" data-cat="Work & Future Cash"><span class="dot" style="background:var(--c-invest)"></span>💼 Work & Future Cash</button>
-            </div>
-          </div>
+    <div class="cc">
+      <div>
+        <div class="cch">Essentials</div>
+        <div class="col">
+          <button class="cb" data-c="Food & Water"><span class="d" style="background:var(--c-food)"></span>🥗 Food & Water</button>
+          <button class="cb" data-c="Transportation"><span class="d" style="background:var(--c-trans)"></span>🚌 Transport</button>
+          <button class="cb" data-c="Coffee & Sweets"><span class="d" style="background:var(--c-coffee)"></span>☕ Coffee & Sweets</button>
+          <button class="cb" data-c="Self Care"><span class="d" style="background:var(--c-self)"></span>🪥 Self Care</button>
         </div>
       </div>
-
-      <div class="form-card">
-        <div class="form-row">
-          <span class="form-row-label">Note</span>
-          <input type="text" id="inp-note" placeholder="optional…"/>
-        </div>
-        <div class="form-row">
-          <span class="form-row-label">Date</span>
-          <input type="date" id="inp-date"/>
+      <div>
+        <div class="cch">Lifestyle</div>
+        <div class="col">
+          <button class="cb" data-c="Social & Family"><span class="d" style="background:var(--c-social)"></span>👥 Social & Family</button>
+          <button class="cb" data-c="Gym & Health"><span class="d" style="background:var(--c-gym)"></span>🏋️ Gym & Health</button>
+          <button class="cb" data-c="Entertainment"><span class="d" style="background:var(--c-entert)"></span>🎬 Entertainment</button>
+          <button class="cb" data-c="Work & Future Cash"><span class="d" style="background:var(--c-work)"></span>💼 Work & Future Cash</button>
         </div>
       </div>
+    </div>
 
-      <button class="save-btn" onclick="addExpense()">Save Expense</button>
+    <div class="fc">
+      <div class="fr"><span class="frl">Note</span><input type="text" id="note" placeholder="optional…"/></div>
+      <div class="fr"><span class="frl">Date</span><input type="date" id="dt"/></div>
+    </div>
+    <button class="sbtn" onclick="addExp()">Save Expense</button>
+  </div>
+</div>
+
+<!-- TODAY -->
+<div class="scr" id="s-today">
+  <div class="hdr"><h1>Today</h1><p id="tdlbl"></p></div>
+  <div class="mg" id="tm"></div>
+  <div class="sec"><div class="stitle">Breakdown</div><div class="ccard"><div id="tbars"></div></div></div>
+  <div class="sec"><div class="stitle">Transactions</div><div id="tlist"></div></div>
+</div>
+
+<!-- HISTORY -->
+<div class="scr" id="s-hist">
+  <div class="hdr"><h1>History</h1></div>
+  <div class="fb" id="fb">
+    <div class="fp on" onclick="setF(this,'')">All</div>
+    <div class="fp" onclick="setF(this,'Food & Water')">🥗 Food</div>
+    <div class="fp" onclick="setF(this,'Transportation')">🚌 Transport</div>
+    <div class="fp" onclick="setF(this,'Coffee & Sweets')">☕ Coffee</div>
+    <div class="fp" onclick="setF(this,'Self Care')">🪥 Self Care</div>
+    <div class="fp" onclick="setF(this,'Social & Family')">👥 Social</div>
+    <div class="fp" onclick="setF(this,'Gym & Health')">🏋️ Gym</div>
+    <div class="fp" onclick="setF(this,'Entertainment')">🎬 Fun</div>
+    <div class="fp" onclick="setF(this,'Work & Future Cash')">💼 Work</div>
+  </div>
+  <div id="hlist"></div>
+</div>
+
+<!-- ANALYSIS -->
+<div class="scr" id="s-anal">
+  <div class="hdr"><h1>Analysis</h1></div>
+  <div style="padding:12px 16px 0">
+    <div class="msel"><select id="msel" onchange="renderAnal()"></select></div>
+  </div>
+  <div class="mg" id="am"></div>
+  <div class="sec">
+    <div class="stitle">Daily spending</div>
+    <div class="ccard">
+      <div class="leg" id="dleg"></div>
+      <div class="cw" style="height:190px"><canvas id="dc" role="img" aria-label="Daily spending chart"></canvas></div>
     </div>
   </div>
-
-  <!-- ══ TODAY ══ -->
-  <div class="screen" id="screen-today">
-    <div class="screen-header">
-      <h1>Today</h1>
-      <p id="today-date-label"></p>
-    </div>
-    <div class="metrics-grid" id="today-metrics"></div>
-    <div class="section">
-      <div class="section-title">Breakdown</div>
-      <div class="chart-card"><div id="today-bars"></div></div>
-    </div>
-    <div class="section">
-      <div class="section-title">Transactions</div>
-      <div id="today-list"></div>
+  <div class="sec">
+    <div class="stitle">Category share</div>
+    <div class="ccard">
+      <div class="leg" id="doleg"></div>
+      <div class="cw" style="height:180px"><canvas id="doc" role="img" aria-label="Category donut chart"></canvas></div>
     </div>
   </div>
-
-  <!-- ══ HISTORY ══ -->
-  <div class="screen" id="screen-history">
-    <div class="screen-header"><h1>History</h1></div>
-    <div class="filter-bar" id="filter-bar">
-      <div class="filter-pill active" onclick="setFilter(this,'')">All</div>
-      <div class="filter-pill" onclick="setFilter(this,'Food & Water')">🥗 Food</div>
-      <div class="filter-pill" onclick="setFilter(this,'Transportation')">🚌 Transport</div>
-      <div class="filter-pill" onclick="setFilter(this,'Coffee & Sweets')">☕ Coffee</div>
-      <div class="filter-pill" onclick="setFilter(this,'Self Care')">🪥 Self Care</div>
-      <div class="filter-pill" onclick="setFilter(this,'Social & Family')">👥 Social & Family</div>
-      <div class="filter-pill" onclick="setFilter(this,'Gym & Health')">🏋️ Gym</div>
-      <div class="filter-pill" onclick="setFilter(this,'Entertainment')">🎬 Fun</div>
-      <div class="filter-pill" onclick="setFilter(this,'Work & Future Cash')">💼 Work & Future</div>
-    </div>
-    <div id="history-content"></div>
-  </div>
-
-  <!-- ══ ANALYSIS ══ -->
-  <div class="screen" id="screen-analysis">
-    <div class="screen-header"><h1>Analysis</h1></div>
-    <div style="padding:14px 16px 0;">
-      <div class="month-sel">
-        <select id="analysis-month" onchange="renderAnalysis()"></select>
-      </div>
-    </div>
-    <div class="metrics-grid" id="analysis-metrics"></div>
-    <div class="section">
-      <div class="section-title">Daily spending</div>
-      <div class="chart-card">
-        <div class="legend" id="daily-legend"></div>
-        <div class="chart-wrap" style="height:200px;"><canvas id="daily-chart" role="img" aria-label="Daily spending bar chart"></canvas></div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section-title">Category share</div>
-      <div class="chart-card">
-        <div class="legend" id="donut-legend"></div>
-        <div class="chart-wrap" style="height:190px;"><canvas id="donut-chart" role="img" aria-label="Category donut chart"></canvas></div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section-title">Monthly overview</div>
-      <div class="chart-card">
-        <div class="chart-wrap" style="height:180px;"><canvas id="trend-chart" role="img" aria-label="Monthly trend chart"></canvas></div>
-      </div>
+  <div class="sec">
+    <div class="stitle">Monthly trend</div>
+    <div class="ccard">
+      <div class="cw" style="height:170px"><canvas id="tc" role="img" aria-label="Monthly trend chart"></canvas></div>
     </div>
   </div>
+</div>
 
-  <!-- ══ NAV ══ -->
-  <nav class="nav">
-    <button class="nav-btn active" id="nav-add" onclick="switchScreen('add')">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Add
-    </button>
-    <button class="nav-btn" id="nav-today" onclick="switchScreen('today')">
-      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Today
-    </button>
-    <button class="nav-btn" id="nav-history" onclick="switchScreen('history')">
-      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1" fill="currentColor" stroke="none"/></svg>History
-    </button>
-    <button class="nav-btn" id="nav-analysis" onclick="switchScreen('analysis')">
-      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Analysis
-    </button>
-  </nav>
+<!-- NAV -->
+<nav class="nav">
+  <button class="nb on" id="n-add" onclick="go('add')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Add
+  </button>
+  <button class="nb" id="n-today" onclick="go('today')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Today
+  </button>
+  <button class="nb" id="n-hist" onclick="go('hist')">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1" fill="currentColor" stroke="none"/></svg>History
+  </button>
+  <button class="nb" id="n-anal" onclick="go('anal')">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Analysis
+  </button>
+</nav>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#0f0f13'); tg.setBackgroundColor('#0f0f13'); }
+/* ── Telegram init ── */
+const tg=window.Telegram?.WebApp;
+if(tg){tg.ready();tg.expand();tg.setHeaderColor('#0f0f13');tg.setBackgroundColor('#0f0f13')}
 
-const CATS = ['Food & Water','Transportation','Coffee & Sweets','Self Care','Social & Family','Gym & Health','Entertainment','Work & Future Cash'];
-const CAT_COLORS = {
-  'Food & Water':  '#1D9E75',
-  'Transportation':'#378ADD',
-  'Coffee & Sweets':'#D4854A',
-  'Self Care':     '#C065C8',
-  'Social & Family':'#D4537E',
-  'Gym & Health':  '#E8A020',
-  'Entertainment': '#D85A30',
-  'Work & Future Cash': '#4DA8DA'
-};
-const CAT_EMOJI = {
-  'Food & Water':'🥗','Transportation':'🚌','Coffee & Sweets':'☕','Self Care':'🪥',
-  'Social & Family':'👥','Gym & Health':'🏋️','Entertainment':'🎬','Work & Future Cash':'💼'
-};
+/* ── Constants ── */
+const CATS=['Food & Water','Transportation','Coffee & Sweets','Self Care','Social & Family','Gym & Health','Entertainment','Work & Future Cash'];
+const CC={'Food & Water':'#1D9E75','Transportation':'#378ADD','Coffee & Sweets':'#D4854A','Self Care':'#C065C8','Social & Family':'#D4537E','Gym & Health':'#E8A020','Entertainment':'#D85A30','Work & Future Cash':'#4DA8DA'};
+const CE={'Food & Water':'🥗','Transportation':'🚌','Coffee & Sweets':'☕','Self Care':'🪥','Social & Family':'👥','Gym & Health':'🏋️','Entertainment':'🎬','Work & Future Cash':'💼'};
 
-let expenses = [], selectedCat = '', histCat = '';
-let dailyChartInst = null, donutChartInst = null, trendChartInst = null;
+/* ── State ── */
+let EXP=[],SEL='',HFILT='';
+let DC=null,DOC=null,TC=null;
 
-function storageKey() { return 'finance_expenses_' + (tg?.initDataUnsafe?.user?.id || 'local'); }
-function loadData() { try { expenses = JSON.parse(localStorage.getItem(storageKey()) || '[]'); } catch(e) { expenses = []; } }
-function saveData() { localStorage.setItem(storageKey(), JSON.stringify(expenses)); }
-function today() { return new Date().toISOString().slice(0,10); }
-function fmtAmt(n) { return 'ETB ' + Math.round(n).toLocaleString(); }
-function fmtDate(d) { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}); }
+/* ── Storage ── */
+const SKEY='fin_'+(tg?.initDataUnsafe?.user?.id||'x');
+function load(){try{EXP=JSON.parse(localStorage.getItem(SKEY)||'[]')}catch{EXP=[]}}
+function save(){localStorage.setItem(SKEY,JSON.stringify(EXP))}
 
-function switchScreen(name) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('screen-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  if (name==='today') renderToday();
-  if (name==='history') renderHistory();
-  if (name==='analysis') { populateMonthSel(); renderAnalysis(); }
+/* ── Utils ── */
+function today(){return new Date().toISOString().slice(0,10)}
+function fmt(n){return 'ETB '+Math.round(n).toLocaleString()}
+function fdate(d){return new Date(d+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+
+/* ── Nav ── */
+function go(s){
+  document.querySelectorAll('.scr').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(x=>x.classList.remove('on'));
+  document.getElementById('s-'+s).classList.add('on');
+  document.getElementById('n-'+s).classList.add('on');
+  if(s==='today')rToday();
+  if(s==='hist')rHist();
+  if(s==='anal'){popMsel();renderAnal()}
 }
 
-// ── Add ──
-document.getElementById('inp-date').value = today();
-document.getElementById('add-date-display').textContent = fmtDate(today());
-
-document.querySelectorAll('.cat-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedCat = btn.dataset.cat;
-    if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+/* ── Add ── */
+document.getElementById('dt').value=today();
+document.getElementById('ddisp').textContent=fdate(today());
+document.querySelectorAll('.cb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.cb').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');SEL=b.dataset.c;
+    tg?.HapticFeedback?.selectionChanged();
   });
 });
 
-function addExpense() {
-  const amount = parseFloat(document.getElementById('inp-amount').value);
-  const date   = document.getElementById('inp-date').value;
-  const note   = document.getElementById('inp-note').value.trim();
-  if (!amount || amount<=0) { showToast('Enter a valid amount', true); return; }
-  if (!selectedCat)          { showToast('Pick a category', true); return; }
-  if (!date)                 { showToast('Pick a date', true); return; }
-  expenses.push({ id: Date.now(), amount, date, note, cat: selectedCat });
-  saveData();
-  document.getElementById('inp-amount').value = '';
-  document.getElementById('inp-note').value   = '';
-  document.getElementById('inp-date').value   = today();
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-  selectedCat = '';
-  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
-  showToast('Saved! ✓');
+function addExp(){
+  const a=parseFloat(document.getElementById('amt').value);
+  const d=document.getElementById('dt').value;
+  const n=document.getElementById('note').value.trim();
+  if(!a||a<=0){toast('Enter a valid amount',1);return}
+  if(!SEL){toast('Pick a category',1);return}
+  if(!d){toast('Pick a date',1);return}
+  EXP.push({id:Date.now(),amount:a,date:d,note:n,cat:SEL});
+  save();
+  document.getElementById('amt').value='';
+  document.getElementById('note').value='';
+  document.getElementById('dt').value=today();
+  document.querySelectorAll('.cb').forEach(x=>x.classList.remove('on'));
+  SEL='';
+  tg?.HapticFeedback?.notificationOccurred('success');
+  toast('Saved ✓');
 }
 
-function showToast(msg, error=false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.style.background = error ? '#c0392b' : '#1D9E75';
-  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000);
+function toast(msg,err=0){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=err?'#c0392b':'#1D9E75';
+  t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2000);
 }
 
-// ── Today ──
-function renderToday() {
-  const t = today();
-  document.getElementById('today-date-label').textContent = fmtDate(t);
-  const todays = expenses.filter(e=>e.date===t);
-  const total  = todays.reduce((s,e)=>s+e.amount,0);
-  const topCat = (() => {
-    const m={}; todays.forEach(e=>{ m[e.cat]=(m[e.cat]||0)+e.amount; });
-    return Object.entries(m).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
-  })();
-  document.getElementById('today-metrics').innerHTML = `
-    <div class="metric-card">
-      <div class="metric-label">Total today</div>
-      <div class="metric-val">${fmtAmt(total)}</div>
-      <div class="metric-sub">${todays.length} transaction${todays.length!==1?'s':''}</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Top category</div>
-      <div class="metric-val" style="font-size:16px;">${CAT_EMOJI[topCat]||''} ${topCat}</div>
-    </div>`;
-  const bycat = {}; todays.forEach(e=>{ bycat[e.cat]=(bycat[e.cat]||0)+e.amount; });
-  const sorted = Object.entries(bycat).sort((a,b)=>b[1]-a[1]);
-  const max = sorted[0]?.[1]||1;
-  document.getElementById('today-bars').innerHTML = sorted.length
-    ? sorted.map(([cat,amt])=>`<div class="bar-row">
-        <div class="bar-row-label">${CAT_EMOJI[cat]} ${cat}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(amt/max*100)}%;background:${CAT_COLORS[cat]}"></div></div>
-        <div class="bar-val">${fmtAmt(amt)}</div></div>`).join('')
-    : '<div style="color:var(--muted);font-size:13px;padding:8px 0;">No expenses yet today.</div>';
-  document.getElementById('today-list').innerHTML = todays.length
-    ? todays.slice().reverse().map(e=>expItem(e)).join('')
-    : '<div class="empty"><div class="empty-icon">📭</div>No transactions today.</div>';
+/* ── Today ── */
+function rToday(){
+  const t=today();
+  document.getElementById('tdlbl').textContent=fdate(t);
+  const td=EXP.filter(e=>e.date===t);
+  const total=td.reduce((s,e)=>s+e.amount,0);
+  const m={};td.forEach(e=>m[e.cat]=(m[e.cat]||0)+e.amount);
+  const top=Object.entries(m).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+  document.getElementById('tm').innerHTML=`
+    <div class="mc"><div class="ml">Total today</div><div class="mv">${fmt(total)}</div><div class="ms">${td.length} transaction${td.length!==1?'s':''}</div></div>
+    <div class="mc"><div class="ml">Top category</div><div class="mv" style="font-size:15px">${CE[top]||''} ${top}</div></div>`;
+  const srt=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  const mx=srt[0]?.[1]||1;
+  document.getElementById('tbars').innerHTML=srt.length
+    ?srt.map(([c,a])=>`<div class="br"><div class="brl">${CE[c]} ${c}</div><div class="btrack"><div class="bfill" style="width:${Math.round(a/mx*100)}%;background:${CC[c]}"></div></div><div class="bval">${fmt(a)}</div></div>`).join('')
+    :'<div style="color:var(--muted);font-size:13px;padding:4px 0">No expenses yet today.</div>';
+  document.getElementById('tlist').innerHTML=td.length
+    ?td.slice().reverse().map(ei).join('')
+    :'<div class="empty"><div class="eico2">📭</div>No transactions today.</div>';
 }
 
-// ── History ──
-function setFilter(el, cat) {
-  document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active'); histCat = cat; renderHistory();
+/* ── History ── */
+function setF(el,cat){
+  document.querySelectorAll('.fp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');HFILT=cat;rHist();
 }
-function renderHistory() {
-  let list = [...expenses].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-  if (histCat) list = list.filter(e=>e.cat===histCat);
-  if (!list.length) { document.getElementById('history-content').innerHTML='<div class="empty"><div class="empty-icon">📭</div>No expenses found.</div>'; return; }
-  const groups = {}; list.forEach(e=>{ (groups[e.date]=groups[e.date]||[]).push(e); });
-  document.getElementById('history-content').innerHTML = Object.entries(groups).map(([date,items])=>{
-    const dayTotal = items.reduce((s,e)=>s+e.amount,0);
-    const label = date===today()?'Today':fmtDate(date);
-    return `<div class="day-group"><div class="day-header"><span>${label}</span><span>${fmtAmt(dayTotal)}</span></div>${items.map(e=>expItem(e)).join('')}</div>`;
+function rHist(){
+  let list=[...EXP].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  if(HFILT)list=list.filter(e=>e.cat===HFILT);
+  if(!list.length){document.getElementById('hlist').innerHTML='<div class="empty"><div class="eico2">📭</div>No expenses found.</div>';return}
+  const g={};list.forEach(e=>(g[e.date]=g[e.date]||[]).push(e));
+  document.getElementById('hlist').innerHTML=Object.entries(g).map(([d,items])=>{
+    const tot=items.reduce((s,e)=>s+e.amount,0);
+    const lbl=d===today()?'Today':fdate(d);
+    return`<div class="dg"><div class="dh"><span>${lbl}</span><span>${fmt(tot)}</span></div>${items.map(ei).join('')}</div>`;
   }).join('');
 }
 
-function expItem(e) {
-  return `<div class="exp-item" id="exp-${e.id}">
-    <div class="exp-icon" style="background:${CAT_COLORS[e.cat]||'#444'}22;">${CAT_EMOJI[e.cat]||'💸'}</div>
-    <div class="exp-body">
-      <div class="exp-cat">${e.cat}</div>
-      ${e.note?`<div class="exp-note">${e.note}</div>`:''}
-    </div>
-    <div class="exp-right">
-      <div class="exp-amt">${fmtAmt(e.amount)}</div>
-      <div class="exp-time">${e.date}</div>
-    </div>
-    <button class="del-swipe" onclick="deleteExp(${e.id})" aria-label="Delete">🗑</button>
+function ei(e){
+  return`<div class="ei" id="e${e.id}">
+    <div class="eico" style="background:${CC[e.cat]||'#333'}22">${CE[e.cat]||'💸'}</div>
+    <div class="ebody"><div class="ecat">${e.cat}</div>${e.note?`<div class="enote">${e.note}</div>`:''}</div>
+    <div class="eright"><div class="eamt">${fmt(e.amount)}</div><div class="edate">${e.date}</div></div>
+    <button class="dbtn" onclick="del(${e.id})" aria-label="Delete">🗑</button>
   </div>`;
 }
 
-function deleteExp(id) {
-  if (tg?.showConfirm) tg.showConfirm('Delete this expense?', ok=>{ if(ok) doDelete(id); });
-  else if (confirm('Delete?')) doDelete(id);
-}
-function doDelete(id) {
-  expenses = expenses.filter(e=>e.id!==id); saveData();
-  const el = document.getElementById('exp-'+id); if (el) el.remove();
-  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('warning');
+function del(id){
+  const run=()=>{EXP=EXP.filter(e=>e.id!==id);save();const el=document.getElementById('e'+id);if(el)el.remove();tg?.HapticFeedback?.notificationOccurred('warning')};
+  tg?.showConfirm?tg.showConfirm('Delete this expense?',ok=>{if(ok)run()}):confirm('Delete?')&&run();
 }
 
-// ── Analysis ──
-function getMonths() {
-  const ms = new Set(expenses.map(e=>e.date.slice(0,7)));
-  ms.add(today().slice(0,7)); return [...ms].sort().reverse();
+/* ── Analysis ── */
+function months(){
+  const s=new Set(EXP.map(e=>e.date.slice(0,7)));
+  s.add(today().slice(0,7));return[...s].sort().reverse();
 }
-function populateMonthSel() {
-  const sel = document.getElementById('analysis-month');
-  const months = getMonths(); const cur = sel.value||months[0];
-  sel.innerHTML = months.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
-}
-function renderAnalysis() {
-  const month = document.getElementById('analysis-month').value||today().slice(0,7);
-  const mexp  = expenses.filter(e=>e.date.startsWith(month));
-  const total = mexp.reduce((s,e)=>s+e.amount,0);
-  const days  = [...new Set(mexp.map(e=>e.date))].sort();
-  const avg   = days.length ? total/days.length : 0;
-
-  document.getElementById('analysis-metrics').innerHTML = `
-    <div class="metric-card">
-      <div class="metric-label">Month total</div>
-      <div class="metric-val">${fmtAmt(total)}</div>
-      <div class="metric-sub">${days.length} active days</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Daily average</div>
-      <div class="metric-val">${fmtAmt(avg)}</div>
-      <div class="metric-sub">${mexp.length} transactions</div>
-    </div>`;
-
-  document.getElementById('daily-legend').innerHTML = CATS.map(c=>`<span class="legend-item"><span class="legend-dot" style="background:${CAT_COLORS[c]}"></span>${c}</span>`).join('');
-
-  const datasets = CATS.map(cat=>({
-    label: cat,
-    data: days.map(d=>mexp.filter(e=>e.date===d&&e.cat===cat).reduce((s,e)=>s+e.amount,0)),
-    backgroundColor: CAT_COLORS[cat], borderRadius:3, borderSkipped:false
-  }));
-  const scaleOpts = { stacked:true, ticks:{font:{size:10},color:'#8888a0'}, grid:{color:'rgba(255,255,255,.04)'} };
-
-  if (dailyChartInst) dailyChartInst.destroy();
-  dailyChartInst = new Chart(document.getElementById('daily-chart'),{
-    type:'bar', data:{ labels:days.map(d=>d.slice(5)), datasets },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ETB ${Math.round(ctx.raw).toLocaleString()}`}} },
-      scales:{ x:{...scaleOpts}, y:{...scaleOpts, ticks:{callback:v=>'ETB '+Math.round(v/1000)+'k',font:{size:10},color:'#8888a0'}} }
-    }
-  });
-
-  const catTotals = CATS.map(cat=>mexp.filter(e=>e.cat===cat).reduce((s,e)=>s+e.amount,0));
-  const nonZero   = CATS.filter((_,i)=>catTotals[i]>0);
-  document.getElementById('donut-legend').innerHTML = nonZero.map(c=>`<span class="legend-item"><span class="legend-dot" style="background:${CAT_COLORS[c]}"></span>${c}: ${fmtAmt(catTotals[CATS.indexOf(c)])}</span>`).join('');
-
-  if (donutChartInst) donutChartInst.destroy();
-  donutChartInst = new Chart(document.getElementById('donut-chart'),{
-    type:'doughnut',
-    data:{ labels:nonZero, datasets:[{ data:nonZero.map(c=>catTotals[CATS.indexOf(c)]), backgroundColor:nonZero.map(c=>CAT_COLORS[c]), borderWidth:2, borderColor:'#1e1e27' }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'64%',
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${ctx.label}: ETB ${Math.round(ctx.raw).toLocaleString()}`}} }
-    }
-  });
-
-  const allMonths = getMonths().slice().reverse();
-  const mTotals   = allMonths.map(m=>expenses.filter(e=>e.date.startsWith(m)).reduce((s,e)=>s+e.amount,0));
-  if (trendChartInst) trendChartInst.destroy();
-  trendChartInst = new Chart(document.getElementById('trend-chart'),{
-    type:'line',
-    data:{ labels:allMonths, datasets:[{ label:'Total', data:mTotals, borderColor:'#6c63ff', backgroundColor:'rgba(108,99,255,.12)', fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#6c63ff' }] },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>`ETB ${Math.round(ctx.raw).toLocaleString()}`}} },
-      scales:{
-        x:{ ticks:{font:{size:10},color:'#8888a0'}, grid:{color:'rgba(255,255,255,.04)'} },
-        y:{ ticks:{callback:v=>'ETB '+Math.round(v/1000)+'k',font:{size:10},color:'#8888a0'}, grid:{color:'rgba(255,255,255,.04)'} }
-      }
-    }
-  });
+function popMsel(){
+  const sl=document.getElementById('msel');
+  const ms=months();const cur=sl.value||ms[0];
+  sl.innerHTML=ms.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
 }
 
-loadData();
-renderToday();
+const gridColor='rgba(255,255,255,.05)';
+const tickColor='#8888a0';
+const baseScale={ticks:{font:{size:10},color:tickColor},grid:{color:gridColor}};
+
+function renderAnal(){
+  const mo=document.getElementById('msel').value||today().slice(0,7);
+  const me=EXP.filter(e=>e.date.startsWith(mo));
+  const total=me.reduce((s,e)=>s+e.amount,0);
+  const days=[...new Set(me.map(e=>e.date))].sort();
+  const avg=days.length?total/days.length:0;
+
+  document.getElementById('am').innerHTML=`
+    <div class="mc"><div class="ml">Month total</div><div class="mv">${fmt(total)}</div><div class="ms">${days.length} active days</div></div>
+    <div class="mc"><div class="ml">Daily average</div><div class="mv">${fmt(avg)}</div><div class="ms">${me.length} transactions</div></div>`;
+
+  document.getElementById('dleg').innerHTML=CATS.map(c=>`<span class="li"><span class="ld" style="background:${CC[c]}"></span>${c}</span>`).join('');
+
+  const ds=CATS.map(cat=>({label:cat,data:days.map(d=>me.filter(e=>e.date===d&&e.cat===cat).reduce((s,e)=>s+e.amount,0)),backgroundColor:CC[cat],borderRadius:3,borderSkipped:false}));
+  if(DC)DC.destroy();
+  DC=new Chart(document.getElementById('dc'),{type:'bar',data:{labels:days.map(d=>d.slice(5)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ETB ${Math.round(c.raw).toLocaleString()}`}}},scales:{x:{...baseScale,stacked:true},y:{...baseScale,stacked:true,ticks:{callback:v=>'ETB '+Math.round(v/1000)+'k',font:{size:10},color:tickColor}}}}});
+
+  const ct=CATS.map(c=>me.filter(e=>e.cat===c).reduce((s,e)=>s+e.amount,0));
+  const nz=CATS.filter((_,i)=>ct[i]>0);
+  document.getElementById('doleg').innerHTML=nz.map(c=>`<span class="li"><span class="ld" style="background:${CC[c]}"></span>${c}: ${fmt(ct[CATS.indexOf(c)])}</span>`).join('');
+  if(DOC)DOC.destroy();
+  DOC=new Chart(document.getElementById('doc'),{type:'doughnut',data:{labels:nz,datasets:[{data:nz.map(c=>ct[CATS.indexOf(c)]),backgroundColor:nz.map(c=>CC[c]),borderWidth:2,borderColor:'#1e1e27'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ETB ${Math.round(c.raw).toLocaleString()}`}}}}});
+
+  const allM=months().slice().reverse();
+  const mT=allM.map(m=>EXP.filter(e=>e.date.startsWith(m)).reduce((s,e)=>s+e.amount,0));
+  if(TC)TC.destroy();
+  TC=new Chart(document.getElementById('tc'),{type:'line',data:{labels:allM,datasets:[{label:'Total',data:mT,borderColor:'#6c63ff',backgroundColor:'rgba(108,99,255,.12)',fill:true,tension:.35,pointRadius:4,pointBackgroundColor:'#6c63ff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`ETB ${Math.round(c.raw).toLocaleString()}`}}},scales:{x:{...baseScale},y:{...baseScale,ticks:{callback:v=>'ETB '+Math.round(v/1000)+'k',font:{size:10},color:tickColor}}}}});
+}
+
+/* ── Boot ── */
+load();rToday();
 </script>
 </body>
 </html>
